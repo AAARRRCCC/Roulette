@@ -7,8 +7,8 @@ public class RussianRoulette {
     private int bulletPosition;
     private int currentChamber;
     private int score = 0;
-    private Random random = new Random();
-    private Scanner scanner = new Scanner(System.in);
+    private final Random random = new Random();
+    private final Scanner scanner = new Scanner(System.in);
     private String playerName;
 
     private static final String FILE_PATH = "RussianRoulette.java";
@@ -48,7 +48,7 @@ public class RussianRoulette {
                         leaderboard.updateLeaderboard(playerName, score);
                         return;
                     } else {
-                        score += 1 * multiplier;
+                        score += multiplier;
                         multiplier++;
                         System.out.println("You're safe... for now.             Multiplier Increased! [x" + multiplier + "]");
                         System.out.println("Score : " + score);
@@ -188,7 +188,7 @@ public class RussianRoulette {
                 scores.add(new PlayerScore(playerName, score));
             }
 
-            Collections.sort(scores, Collections.reverseOrder());
+            scores.sort(Collections.reverseOrder());
 
             if (scores.size() > 10) {
                 scores = scores.subList(0, 10);
