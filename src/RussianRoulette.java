@@ -6,118 +6,47 @@ import java.util.*;
 public class RussianRoulette {
     private int bulletPosition;
     private int currentChamber;
-    private int score = 0;
+    public int score = 0;
     private final Random random = new Random();
-    private final Scanner scanner = new Scanner(System.in);
     private String playerName;
-
-    private static final String FILE_PATH = "RussianRoulette.java";
-    private static String highScore = "48";
-    private static String highScoreHolder = "Ryan";
-
     private int multiplier = 1;
+    private LeaderboardManager leaderboard;
 
     public RussianRoulette(String playerName) {
         this.playerName = playerName;
+        this.leaderboard = new LeaderboardManager();
         spinCylinder();
     }
 
-    private void spinCylinder() {
-        bulletPosition = random.nextInt(6) + 1; //Exclusive bound!
+    public void spinCylinder() {
+        bulletPosition = random.nextInt(6) + 1; // Exclusive bound!
         currentChamber = random.nextInt(6) + 1;
-        System.out.println("The cylinder is spun... No one knows where the bullet is.");
-        System.out.println("Because you're a coward, I've reset the multiplier to 1.");
         multiplier = 1;
     }
 
-    public void playGame() {
-        LeaderboardManager leaderboard = new LeaderboardManager();
-        System.out.println("Russian Roulette: Type 'pull' to pull the trigger, 'spin' to spin the cylinder again, 'leaderboard' to see cheaters, or 'quit' to exit. ");
-
-        String input;
-        while (true) {
-            System.out.print("> ");
-            input = scanner.nextLine().trim().toLowerCase();
-
-            switch (input) {
-                case "pull":
-                    if (pullTrigger()) {
-                        updateHighScore();
-                        System.out.println("You died lol.");
-                        System.out.println("Score : " + score + "             High Score : " + highScore + " by " + highScoreHolder);
-                        leaderboard.updateLeaderboard(playerName, score);
-                        return;
-                    } else {
-                        score += multiplier;
-                        multiplier++;
-                        System.out.println("You're safe... for now.             Multiplier Increased! [x" + multiplier + "]");
-                        System.out.println("Score : " + score);
-                        updateHighScore();
-                        currentChamber = (currentChamber % 6) + 1;
-                    }
-                    break;
-                case "spin":
-                    spinCylinder();
-                    break;
-                case "leaderboard":
-                    leaderboard.displayLeaderboard();
-                    break;
-                case "quit":
-                    System.out.println("Game over.");
-                    updateHighScore();
-                    return;
-                default:
-                    System.out.println("Type 'pull', 'spin', or 'quit'.");
-            }
-        }
-    }
-
-    private boolean pullTrigger() {
-        return currentChamber == bulletPosition;
-    }
-
-    private void readHighScore(){
-        try {
-            List<String> lines = Files.readAllLines(Paths.get(FILE_PATH));
-            for (String line : lines) {
-                if (line.startsWith("private static String highScore =")) {
-                    highScore = line.substring(line.indexOf('"') + 1, line.lastIndexOf('"'));
-                    highScoreHolder = lines.get(16).substring(lines.get(16).indexOf('"') + 1, lines.get(16).lastIndexOf('"'));
-                    break;
-                }
-            }
-        } catch (IOException e) {
-            System.out.println("Ermm... well this is awkward... >.< ur file sucks mister..");
-        }
-    }
-
-    private void updateHighScore(){
-        if (score > Integer.parseInt(highScore)) {
-            highScore = String.valueOf(score);
-            highScoreHolder = playerName;
-            try {
-                List<String> lines = Files.readAllLines(Paths.get(FILE_PATH));
-                lines.set(15, "    private static String highScore = \"" + highScore + "\"; // High score");
-                lines.set(16, "    private static String highScoreHolder = \"" + highScoreHolder + "\"; // High score holder");
-                Files.write(Paths.get(FILE_PATH), lines);
-                System.out.println("High Score Updated: " + highScore + " by " + highScoreHolder);
-            } catch (IOException e) {
-                System.out.println("Ermm... well this is awkward... >.< ur file sucks..");
-            }
+    public boolean pullTrigger() {
+        boolean result = currentChamber == bulletPosition;
+        if (!result) {
+            score += multiplier;
+            multiplier++;
+            currentChamber = (currentChamber % 6) + 1;
         } else {
-            System.out.println("High Score Remains: " + highScore + " by " + highScoreHolder);
+            leaderboard.updateLeaderboard(playerName, score);
         }
+        return result;
     }
 
-    public static void main(String[] args) {
-        Scanner inputScanner = new Scanner(System.in);
-        System.out.print("Enter your name: ");
-        String name = inputScanner.nextLine().trim();
+    public void resetGame() {
+        score = 0;
+        spinCylinder();
+    }
 
-        RussianRoulette game = new RussianRoulette(name);
-        game.readHighScore();
-        System.out.println("High Score : " + highScore + " by " + highScoreHolder);
-        game.playGame();
+    public int getMultiplier() {
+        return multiplier;
+    }
+
+    public LeaderboardManager getLeaderboardManager() {
+        return leaderboard;
     }
 
     public class PlayerScore implements Comparable<PlayerScore> {
@@ -151,7 +80,6 @@ public class RussianRoulette {
             return playerName + ": " + score;
         }
     }
-
 
     public class LeaderboardManager {
         private static final String LEADERBOARD_FILE = "leaderboard.txt";
@@ -197,7 +125,6 @@ public class RussianRoulette {
             saveScores();
         }
 
-
         private void saveScores() {
             try (PrintWriter writer = new PrintWriter(new FileWriter(LEADERBOARD_FILE))) {
                 for (PlayerScore score : scores) {
@@ -208,13 +135,12 @@ public class RussianRoulette {
             }
         }
 
-        public void displayLeaderboard() {
-            System.out.println("Leaderboard:");
+        public String displayLeaderboard() {
+            StringBuilder leaderboard = new StringBuilder("Leaderboard:\n");
             for (PlayerScore score : scores) {
-                System.out.println(score);
+                leaderboard.append(score).append("\n");
             }
+            return leaderboard.toString();
         }
     }
-
-
 }
